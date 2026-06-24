@@ -1,0 +1,13 @@
+# Enable metrics-server for HPA to work
+# Run this first: minikube addons enable metrics-server
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fraud-detection-config
+  namespace: fraud-detection
+data:
+  LOG_LEVEL: "INFO"
+  MODEL_VERSION: "v1.0.0"
+  MAX_BATCH_SIZE: "1000"

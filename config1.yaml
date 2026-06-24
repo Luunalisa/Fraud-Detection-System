@@ -1,0 +1,22 @@
+data:
+  raw_path: "data/raw/creditcard.csv"
+  train_path: "data/processed/train.csv"
+  test_path: "data/processed/test.csv"
+  #test_size: 0.2
+  random_state: 42
+
+model:
+  path: "models/fraud_model.joblib"
+  scaler_path: "models/scaler.joblib"
+  threshold: 0.5
+
+training:
+  n_estimators: 200
+  max_depth: 6
+  learning_rate: 0.1
+  min_precision: 0.3    # CI/CD gate: fail if below
+
+aws:
+  bucket: "fraud-detection-bucket"
+  region: "us-east-1"
+  ecr_repo: "fraud-detection-api"

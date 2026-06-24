@@ -1,0 +1,84 @@
+
+project:
+  name: "fraud-detection"
+  version: "1.0.0"
+  description: "Credit card fraud detection — binary classification on imbalanced data"
+  author: "ML Team"
+  random_state: 42
+
+data:
+  raw_path: "data/raw/creditcard.csv"
+  interim_path: "data/interim/creditcard_clean.parquet"
+  processed_path: "data/processed/"
+  target_column: "Class"
+  drop_columns: []
+  drop_time_outlier: ["Time"]
+  id_columns: []
+
+preprocessing:
+  duplicate_strategy: "drop"          # drop | keep_first | keep_last
+  missing_strategy: "drop"            # drop | mean | median | mode | knn
+  outlier_strategy: "flag"            # flag | clip | remove | none
+  outlier_method: "zscore"            # zscore | iqr
+  outlier_threshold: 3.0
+  scale_columns:
+    - "Amount"
+    - "log_amount"
+    - "amount_zscore"
+  scaler: "standard"                  # standard | minmax | robust
+
+feature_engineering:
+  time_features: true
+  amount_features: true
+  interaction_features: false
+  polynomial_degree: 1
+
+split:
+  test_size: 0.15
+  val_size: 0.15                      # fraction of total
+  stratify: true
+
+balancing:
+  strategy: "smote"                   # smote | adasyn | undersample | none
+  sampling_strategy: "auto"           # auto | float (0.5 = 50% minority)
+  k_neighbors: 5
+
+feature_selection:
+  method: "rfe"                       # rfe | importance | mutual_info | variance | all (means keep all features)
+  n_features: 20
+  variance_threshold: 0.01
+  correlation_threshold: 0.95
+
+pathss:
+  artifacts: "artifacts/"
+  figures: "artifacts/figures/"
+  scaler: "data/processed/scaler.joblib"
+  selected_features: "data/processed/selected_features.json"
+  processed_train: "data/processed/X_train.parquet"
+  processed_val: "data/processed/X_val.parquet"
+  processed_test: "data/processed/X_test.parquet"
+  preprocessor : "artifacts/data/preprocessor.pkl"
+  feature_engineer : "artifacts/data/feature_engineer.pkl"
+
+
+paths:
+  artifacts: "artifacts/"
+
+  figures: "artifacts/figures/"
+
+  scaler: "artifacts/preprocessing/scaler.joblib"
+  preprocessor: "artifacts/preprocessing/preprocessor.pkl"
+
+  feature_engineer: "artifacts/feature_engineering/feature_engineer.pkl"
+  #selected_features: "artifacts/feature_engineering/selected_features.json"
+  feature_names : "artifacts/feature_engineering/feature_names.json"
+
+  processed_train: "data/processed/X_train.parquet"
+  processed_val: "data/processed/X_val.parquet"
+  processed_test: "data/processed/X_test.parquet"
+
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+  file: "reports/pipeline.log"

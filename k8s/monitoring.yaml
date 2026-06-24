@@ -1,0 +1,76 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: fraud-detection
+  namespace: fraud-detection
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: fraud-detection
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: fraud-detection-alerts
+  namespace: fraud-detection
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: fraud-detection.rules
+      interval: 30s
+      rules:
+
+        - alert: FraudAPIHighLatency
+          expr: |
+            histogram_quantile(0.99,
+              rate(fraud_prediction_latency_seconds_bucket[5m])
+            ) > 0.5
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Fraud API p99 latency > 500ms"
+
+        - alert: FraudAPIHighErrorRate
+          expr: |
+            rate(http_requests_total{status=~"5.."}[5m])
+            /
+            rate(http_requests_total[5m]) > 0.01
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Fraud API error rate > 1%"
+
+        - alert: FraudAPILowReplicas
+          expr: |
+            kube_deployment_status_replicas_available{
+              deployment="fraud-detection",
+              namespace="fraud-detection"
+            } < 2
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Fraud API has fewer than 2 replicas"
+
+        - alert: FraudRateSpike
+          expr: |
+            rate(fraud_predictions_total{prediction_label="fraud"}[10m])
+            /
+            rate(fraud_predictions_total[10m]) > 0.20
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Fraud rate > 20% — possible drift or attack"

@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraud-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./artifacts:/home/appuser/artifacts:ro
+      - ./configs:/home/appuser/configs:ro
+    environment:
+      - LOG_LEVEL=INFO
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - fraud-net
+
+  streamlit:
+    image: python:3.11-slim
+    container_name: fraud-dashboard
+    working_dir: /app
+    volumes:
+      - ./streamlit:/app
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+    command: >
+      sh -c "pip install -r requirements.txt -q &&
+             streamlit run app.py
+             --server.port=8501
+             --server.address=0.0.0.0
+             --server.headless=true"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - fraud-net
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: fraud-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+    networks:
+      - fraud-net
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: fraud-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - fraud-net
+    profiles:
+      - monitoring
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  fraud-net:
+    driver: bridge

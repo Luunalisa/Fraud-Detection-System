@@ -1,0 +1,112 @@
+{
+  "title": "Fraud Detection API",
+  "uid": "fraud-detection",
+  "version": 1,
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total Predictions",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{
+        "expr": "sum(fraud_predictions_total)",
+        "legendFormat": "Total"
+      }]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Fraud Detections",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [{
+        "expr": "sum(fraud_predictions_total{prediction_label='fraud'})",
+        "legendFormat": "Fraud"
+      }]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Fraud Rate",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [{
+        "expr": "sum(rate(fraud_predictions_total{prediction_label='fraud'}[5m])) / sum(rate(fraud_predictions_total[5m]))",
+        "legendFormat": "Fraud Rate"
+      }]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "p99 Latency",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [{
+        "expr": "histogram_quantile(0.99, rate(fraud_prediction_latency_seconds_bucket[5m]))",
+        "legendFormat": "p99"
+      }]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Predictions per second",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(fraud_predictions_total{prediction_label='legitimate'}[1m])",
+          "legendFormat": "Legitimate"
+        },
+        {
+          "expr": "rate(fraud_predictions_total{prediction_label='fraud'}[1m])",
+          "legendFormat": "Fraud"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Prediction Latency p50/p95/p99",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(fraud_prediction_latency_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(fraud_prediction_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(fraud_prediction_latency_seconds_bucket[5m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "HTTP Error Rate",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [{
+        "expr": "rate(http_requests_total{status=~'5..'}[5m]) / rate(http_requests_total[5m])",
+        "legendFormat": "Error rate"
+      }]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Batch Size Distribution",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(fraud_batch_size_bucket[5m]))",
+          "legendFormat": "p50 batch size"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(fraud_batch_size_bucket[5m]))",
+          "legendFormat": "p99 batch size"
+        }
+      ]
+    }
+  ]
+}

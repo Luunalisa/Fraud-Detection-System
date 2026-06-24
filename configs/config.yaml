@@ -1,0 +1,42 @@
+# configs/config.yaml — Main project configuration for the Fraud Detection System.
+# Keys mirror exactly what train_model() reads via load_config().
+
+mlflow:
+  tracking_uri: mlruns
+  experiment_name: fraud_detection
+  registered_model_name: FraudXGB
+
+artifacts:
+  #path: models/trained_models/fraud_model.pkl
+  model: "artifacts/models/xgboost_fraud_model.pkl"
+  test_metrics: "artifacts/evaluation/test_metrics.json"
+  classification_report: "artifacts/evaluation/classification_report.txt"
+  confusion_matrix : "artifacts/evaluation/confusion_matrix.csv"
+  feature_importance : "artifacts/evaluation/feature_importance.csv"
+  threshold_analysis : "artifacts/evaluation/threshold_analysis.json"
+
+
+training:
+  scale_pos_weight: 577          # approx. ratio of negatives to positives
+  fbeta_beta: 0.5                # beta < 1 → weights precision over recall
+  min_precision: 0.3            # CI/CD gate — deployment blocked if below this
+  default_threshold: 0.5         # fallback when no .meta.json sidecar found
+  # These are only used when optuna.enabled = false:
+  n_estimators: 500
+  max_depth: 6
+  learning_rate: 0.05
+
+cross_validation:
+  n_splits: 5
+
+optuna:
+  enabled: True
+  n_trials: 50
+  timeout_seconds: null          # null = no wall-clock limit
+  show_progress_bar: true
+  
+drift:
+  psi_warn_threshold: 0.20       # PSI >= this triggers a warning
+
+features:
+  names: null                    # set to a list of strings to override f0/f1/…
