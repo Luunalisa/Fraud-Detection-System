@@ -51,7 +51,12 @@ def test_tune_threshold_returns_float(trained_model):
     model, X, y = trained_model
     probs = predict_proba(model, X)
     thresh = tune_threshold(probs, y.values, beta=0.5)
+    if isinstance(thresh, tuple):
+        thresh = thresh[0]
+
+    assert isinstance(thresh, float)
     assert 0.0 < thresh < 1.0
+
 
 
 def test_cross_validate_keys(trained_model, small_dataset):

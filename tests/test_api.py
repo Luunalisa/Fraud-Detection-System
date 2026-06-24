@@ -103,6 +103,8 @@ class TestPredictBatch:
         return {"transactions": [VALID_TRANSACTION] * n}
 
     def test_batch_multiple_items(self, client_legitimate):
+        mock_arts = make_mock_artifacts()
+        mock_arts["model"].predict_proba.return_value = np.tile([0.98, 0.02], (10, 1))
         r = client_legitimate.post("/predict/batch", json=self._make_batch(10))
         assert r.status_code == 200
         data = r.json()

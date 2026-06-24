@@ -52,8 +52,8 @@ class TransactionRequest(BaseModel):
     Amount: float = Field(..., ge=0.0, description="Transaction amount in USD")
     Time:   float = Field(..., ge=0.0, description="Seconds elapsed since first transaction")
 
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        json_schema_extra :{
             "example": {
                 "V1": -1.3598071336738, "V2": -0.0727811733098497,
                 "V3": 2.53634673796914,  "V4": 1.37815522427443,
@@ -70,10 +70,17 @@ class TransactionRequest(BaseModel):
                 "V25": 0.128539358273528, "V26": -0.189114843888824,
                 "V27": 0.133558376740387, "V28": -0.0210530534538215,
                 "Amount": 149.62,
-                "Time": 0.0
+                "Time": 0.0 
+                    
+                }
+            
+            
             }
-        }
-
+    }
+        
+        
+    
+    
 
 class PredictionResponse(BaseModel):
     prediction:    int   = Field(..., description="0 = legitimate, 1 = fraud")

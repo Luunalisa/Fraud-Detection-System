@@ -179,7 +179,7 @@ async def predict(request: TransactionRequest):
         arts = get_artifacts()
         t0 = time.perf_counter()
 
-        result = run_single(request.dict(), arts)
+        result = run_single(request.model_dump(), arts)
 
         latency = time.perf_counter() - t0
         PREDICTION_LATENCY.observe(latency)
@@ -210,7 +210,7 @@ async def predict_batch(body: BatchTransactionRequest):
         arts = get_artifacts()
         t0 = time.perf_counter()
 
-        requests_dicts = [t.dict() for t in body.transactions]
+        requests_dicts = [t.model_dump() for t in body.transactions]
         result = run_batch(requests_dicts, arts)
 
         latency = time.perf_counter() - t0

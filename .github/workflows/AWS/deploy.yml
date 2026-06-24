@@ -1,4 +1,4 @@
-name: CI/CD — Fraud Detection API
+name: CI/CD — Fraud Detection API (AWS ECR)
 
 on:
   push:

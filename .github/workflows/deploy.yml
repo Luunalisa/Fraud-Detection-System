@@ -1,4 +1,4 @@
-name: CI/CD — Fraud Detection API
+name: CI/CD — Fraud Detection API (Docker Hub)
 
 on:
   push:
