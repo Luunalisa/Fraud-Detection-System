@@ -53,7 +53,7 @@ class TransactionRequest(BaseModel):
     Time:   float = Field(..., ge=0.0, description="Seconds elapsed since first transaction")
 
     model_config = {
-        json_schema_extra :{
+        "json_schema_extra" :{
             "example": {
                 "V1": -1.3598071336738, "V2": -0.0727811733098497,
                 "V3": 2.53634673796914,  "V4": 1.37815522427443,
