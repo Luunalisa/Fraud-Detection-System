@@ -105,10 +105,21 @@ class TestPredictBatch:
     def test_batch_multiple_items(self, client_legitimate):
         mock_arts = make_mock_artifacts()
         mock_arts["model"].predict_proba.return_value = np.tile([0.98, 0.02], (10, 1))
+        with patch("app.artifacts.get_artifacts", return_value=mock_arts):
+            with patch("app.main.get_artifacts", return_value=mock_arts):
+                from app.main import app
+                with TestClient(app) as c:
+                    r = c.post("/predict/batch", json=self._make_batch(10))
+                    assert r.status_code == 200
+                    data = r.json()
+                    assert data["total"] == 10 
+        
+        """
         r = client_legitimate.post("/predict/batch", json=self._make_batch(10))
         assert r.status_code == 200
         data = r.json()
         assert data["total"] == 10
+        """
 
     def test_batch_empty_returns_422(self, client_legitimate):
         r = client_legitimate.post("/predict/batch", json={"transactions": []})
