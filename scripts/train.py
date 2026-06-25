@@ -1,15 +1,3 @@
-"""
-scripts/train.py — Entry-point script for training the Fraud Detection model.
-
-Previously the  `if __name__ == "__main__":`  block at the bottom of train.py.
-Separated here so the pipeline can be imported as a library without side-effects,
-and so CI/CD systems have a clean, single-file entry point to invoke.
-
-Usage
------
-    python scripts/train.py
-    python scripts/train.py --config configs/config.yaml
-"""
 
 from __future__ import annotations
 
