@@ -1,13 +1,3 @@
-"""
-src/models/train_model.py — Hyperparameter tuning with Optuna (TPE + pruning).
-
-Extracted from train.py:
-  - _make_objective() : builds the Optuna objective using StratifiedKFold AUPRC.
-  - run_optuna()      : creates the study, runs it, and returns best params.
-
-Improvement #1 from the original pipeline:
-  Hyperparameter Tuning — Optuna (TPE sampler, pruning via XGBoost eval).
-"""
 
 from __future__ import annotations
 

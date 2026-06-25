@@ -8,8 +8,7 @@ venv/
 
 # Data & notebooks
 data/
-notebooks/
-*.ipynb
+
 
 # MLflow
 mlruns/

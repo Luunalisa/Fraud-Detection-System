@@ -1,17 +1,4 @@
-"""
-src/utils/helpers.py — Population Stability Index (PSI) for data drift detection.
 
-Moved from src/drift.py — all logic is preserved exactly.
-
-PSI interpretation (industry standard):
-  PSI < 0.10  → No significant change
-  PSI < 0.20  → Minor shift, monitor
-  PSI >= 0.20 → Major shift, investigate / retrain
-
-Used by the training pipeline to compare feature distributions between:
-  - training set vs validation set
-  - training set vs test set
-"""
 
 from __future__ import annotations
 
@@ -30,19 +17,7 @@ def compute_psi(
     comparison: np.ndarray,
     n_bins: int = 10,
 ) -> float:
-    """
-    Compute the PSI for a single feature.
 
-    Parameters
-    ----------
-    reference  : 1-D array from the reference distribution (e.g. training set).
-    comparison : 1-D array from the comparison distribution (e.g. validation set).
-    n_bins     : Number of equal-width buckets (default 10).
-
-    Returns
-    -------
-    psi : float — Population Stability Index value.
-    """
     # Determine bin edges from the reference distribution
     min_val = min(reference.min(), comparison.min())
     max_val = max(reference.max(), comparison.max())
@@ -77,21 +52,7 @@ def psi_report(
     feature_names: Sequence[str] | None = None,
     n_bins: int = 10,
 ) -> dict[str, float]:
-    """
-    Compute PSI for every feature column and return a {feature_name: psi} dict.
 
-    Parameters
-    ----------
-    X_reference   : 2-D reference array (n_samples, n_features).
-    X_comparison  : 2-D comparison array.
-    label         : Human-readable tag for log messages.
-    feature_names : Optional list of feature names (used as dict keys).
-    n_bins        : Passed through to compute_psi.
-
-    Returns
-    -------
-    report : dict mapping feature name → PSI value.
-    """
     n_features = X_reference.shape[1]
 
     if feature_names is None:
