@@ -49,18 +49,6 @@ feature_selection:
   variance_threshold: 0.01
   correlation_threshold: 0.95
 
-pathss:
-  artifacts: "artifacts/"
-  figures: "artifacts/figures/"
-  scaler: "data/processed/scaler.joblib"
-  selected_features: "data/processed/selected_features.json"
-  processed_train: "data/processed/X_train.parquet"
-  processed_val: "data/processed/X_val.parquet"
-  processed_test: "data/processed/X_test.parquet"
-  preprocessor : "artifacts/data/preprocessor.pkl"
-  feature_engineer : "artifacts/data/feature_engineer.pkl"
-
-
 paths:
   artifacts: "artifacts/"
 
@@ -77,8 +65,8 @@ paths:
   processed_val: "data/processed/X_val.parquet"
   processed_test: "data/processed/X_test.parquet"
 
+  processed_y_train: "data/processed/y_train.parquet"
+  processed_y_val: "data/processed/y_val.parquet"
+  processed_y_test: "data/processed/y_test.parquet"
 
-logging:
-  level: "INFO"
-  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
-  file: "reports/pipeline.log"
+

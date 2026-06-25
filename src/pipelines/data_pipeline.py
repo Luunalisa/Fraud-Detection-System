@@ -117,10 +117,11 @@ def run_pipeline(config_path: str = "configs/data_config.yaml") -> dict:
     fe.save_scaler(cfg["paths"]["scaler"])
     fe.save_feature_names()
     fe.save_feature_engineer()
+    fe.save_parquets(X_tr_eng,X_v_eng,X_te_eng,y_train_clean,y_val,y_test)
 
     viz.plot_skewness(X_train_clean, X_tr_eng)
 
-    # ── 6. Feature Selection + SMOTE — train only ────────────────
+    # ── 6. Feature Selection + SMOTE — train only ────────────────  we dont use feature selection for xgboost model ( i can uncoment it and use eng train data and for linear ill use selected train data)
     #logger.info("\n[7/7] FEATURE SELECTION + SMOTE")
     logger.info("\n[7/7] SMOTE")
     selector = FeatureSelector(config_path)
@@ -150,11 +151,11 @@ def run_pipeline(config_path: str = "configs/data_config.yaml") -> dict:
         fraud_val=int(y_val.sum()),
         fraud_test=int(y_test.sum()),
     )
-
+    """
     mi = selector.feature_scores_.get("mutual_info", {})
     if mi:
         viz.plot_feature_importance(mi, title="Mutual Information (top 20)")       
-    
+    """
 
     # Save processed data 
     selector.save_results(
@@ -189,15 +190,13 @@ def run_pipeline(config_path: str = "configs/data_config.yaml") -> dict:
         selector        = selector,
     )
 
-    #selector.save_results(results, "data/processed/")
-
     # ── Save dashboard artifacts ──────────────────────────────────
     save_all(results)
 
 
     elapsed = time.time() - t0
     logger.info(f"Pipeline complete in {elapsed:.1f}s")
-    logger.info(f"Train (balanced): {len(X_train_bal):,} ")
+    
   
 
     return results

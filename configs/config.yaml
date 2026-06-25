@@ -1,5 +1,3 @@
-# configs/config.yaml — Main project configuration for the Fraud Detection System.
-# Keys mirror exactly what train_model() reads via load_config().
 
 mlflow:
   tracking_uri: mlruns

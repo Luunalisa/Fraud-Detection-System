@@ -1,19 +1,3 @@
-"""
-app/artifacts.py — Singleton loader for all inference artifacts.
-
-Loaded ONCE at startup via lifespan, cached with lru_cache.
-All inference code calls get_artifacts() — never loads from disk again.
-
-Artifacts expected at runtime (mounted via Kubernetes secret/volume or
-copied into the Docker image):
-  artifacts/
-    fraud_model.pkl          ← XGBoost model (joblib)
-    fraud_model.meta.json    ← threshold, version, metrics
-    preprocessor.pkl         ← fitted DataPreprocessor
-    feature_engineer.pkl     ← fitted FeatureEngineer
-    feature_names.json       ← ordered list of 46 feature names
-"""
-
 from __future__ import annotations
 
 import json
@@ -33,10 +17,7 @@ ARTIFACTS_DIR = Path("artifacts")
 
 @lru_cache(maxsize=None)
 def get_artifacts() -> dict:
-    """
-    Load and return all inference artifacts as a dict.
-    lru_cache ensures this runs exactly once per process lifetime.
-    """
+    
     data_cfg = cfg = load_config("configs/data_config.yaml")
     cfg = load_config("configs/config.yaml")
     logger.info("Loading inference artifacts from %s ...", ARTIFACTS_DIR)

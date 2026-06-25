@@ -1,13 +1,4 @@
-"""
-app/main.py — FastAPI application for the Fraud Detection Service.
 
-Endpoints:
-  GET  /health          → liveness + readiness probe (used by Kubernetes)
-  GET  /info            → model version, threshold, metrics, feature list
-  POST /predict         → single transaction scoring
-  POST /predict/batch   → batch transaction scoring
-  GET  /metrics         → Prometheus metrics scrape endpoint
-"""
 
 from __future__ import annotations
 
@@ -70,10 +61,7 @@ BATCH_SIZE = Histogram(
 # ── Lifespan — runs on startup and shutdown ───────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Startup: warm-up the artifact cache so the first request is fast.
-    Shutdown: clean-up if needed.
-    """
+   
     log.info("startup.begin")
     try:
         get_artifacts()                       # loads model, preprocessor, feature_engineer
@@ -138,10 +126,8 @@ async def log_requests(request: Request, call_next):
 
 @app.get("/health", response_model=HealthResponse, tags=["ops"])
 async def health():
-    """
-    Kubernetes liveness + readiness probe.
-    Returns 200 when model is loaded, 503 otherwise.
-    """
+    
+   
     try:
         arts = get_artifacts()
         return HealthResponse(
@@ -156,7 +142,7 @@ async def health():
 
 @app.get("/info", response_model=ModelInfoResponse, tags=["ops"])
 async def model_info():
-    """Return model metadata, metrics, and full feature list."""
+   
     arts = get_artifacts()
     return ModelInfoResponse(
         model_version=arts["model_version"],
@@ -169,12 +155,7 @@ async def model_info():
 
 @app.post("/predict", response_model=PredictionResponse, tags=["inference"])
 async def predict(request: TransactionRequest):
-    """
-    Score a single transaction.
-
-    Applies: DataPreprocessor.transform() → FeatureEngineer.transform() → XGBoost
-    Returns fraud probability and binary prediction at the tuned threshold.
-    """
+ 
     try:
         arts = get_artifacts()
         t0 = time.perf_counter()
@@ -196,11 +177,7 @@ async def predict(request: TransactionRequest):
 
 @app.post("/predict/batch", response_model=BatchPredictionResponse, tags=["inference"])
 async def predict_batch(body: BatchTransactionRequest):
-    """
-    Score a batch of transactions.
-    Much faster than calling /predict N times — XGBoost is vectorised.
-    Maximum 1000 transactions per request.
-    """
+   
     if len(body.transactions) == 0:
         raise HTTPException(status_code=422, detail="Empty batch")
     if len(body.transactions) > 1000:

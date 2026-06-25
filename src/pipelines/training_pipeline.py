@@ -1,17 +1,4 @@
-"""
-src/pipelines/training_pipeline.py — End-to-end training orchestration.
 
-This module contains train_model(), which was previously the main function in
-train.py.  It wires together every improvement in the correct order:
-
-  1. Hyperparameter Tuning    — src/models/train_model.py  (run_optuna)
-  2. Threshold Tuning         — src/models/evaluate_model.py (tune_threshold)
-  3. Experiment Tracking      — MLflow run wrapping the whole pipeline
-  4. Cross-Validation         — src/models/evaluate_model.py (cross_validate_model)
-  5. Feature Importance       — src/models/evaluate_model.py (log_feature_importance)
-  6. Model Versioning         — src/models/model_registry.py (save_model / write_meta)
-  7. Data Drift Detection     — src/utils/helpers.py (psi_report)
-"""
 
 from __future__ import annotations
 
@@ -33,7 +20,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from src.data_pipeline import prepare_dataset
+
 from src.models.evaluate_model import (
     cross_validate_model,
     log_feature_importance,
@@ -59,11 +46,11 @@ def train_model(config_path: str = "configs/config.yaml"):
 
     # ── Data ──────────────────────────────────────────────────────────────────
     #X_train, X_test, X_val, y_train, y_test, y_val = prepare_dataset()
-    X_train = pd.read_parquet("data/processed/X_train_bal.parquet")
+    X_train = pd.read_parquet("data/processed/X_train.parquet")
     X_val   = pd.read_parquet("data/processed/X_val.parquet")
     X_test  = pd.read_parquet("data/processed/X_test.parquet")
 
-    y_train = pd.read_parquet("data/processed/y_train_bal.parquet")["Class"]
+    y_train = pd.read_parquet("data/processed/y_train.parquet")["Class"]
     y_val   = pd.read_parquet("data/processed/y_val.parquet")["Class"]
     y_test  = pd.read_parquet("data/processed/y_test.parquet")["Class"]
 

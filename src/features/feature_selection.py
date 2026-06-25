@@ -71,6 +71,8 @@ class FeatureSelector:
         y_train: pd.Series,
     ) -> Tuple[pd.DataFrame, pd.Series]:
         
+         ############ we should use smote inside CV and using it in data_pipeline our CV metrics will be optimistically biased because of data leakage
+        
         strategy = self.bl_cfg.get("strategy", "smote")
         sampling = self.bl_cfg.get("sampling_strategy", "auto")
         k        = int(self.bl_cfg.get("k_neighbors", 5))

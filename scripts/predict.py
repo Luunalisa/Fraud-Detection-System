@@ -1,11 +1,3 @@
-"""
-scripts/predict.py — Entry-point script for running batch inference.
-
-Usage
------
-    python scripts/predict.py --input data/new_transactions.csv
-    python scripts/predict.py --input data/new_transactions.csv --config configs/config.yaml
-"""
 
 from __future__ import annotations
 

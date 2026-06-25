@@ -1,9 +1,3 @@
-"""
-src/pipelines/inference_pipeline.py — End-to-end inference orchestration.
-
-Loads the trained model and metadata, then scores an input feature matrix,
-returning both probabilities and binary predictions at the tuned threshold.
-"""
 
 from __future__ import annotations
 
@@ -20,22 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def run_inference(X, config_path: str = "configs/config.yaml") -> dict:
-    """
-    Load the production model and score *X*.
 
-    Parameters
-    ----------
-    X           : array-like of shape (n_samples, n_features).
-    config_path : path to the project config YAML.
-
-    Returns
-    -------
-    dict with keys:
-      - 'probabilities' : np.ndarray of fraud scores.
-      - 'predictions'   : np.ndarray of binary labels (0 / 1).
-      - 'threshold'     : float — decision cut-off used.
-      - 'model_version' : str  — version tag from the meta sidecar.
-    """
     cfg = load_config(config_path)
     model_path = cfg["model"]["path"]
 

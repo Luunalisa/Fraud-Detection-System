@@ -33,6 +33,7 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         self.cfg      = load_config(config_path)
         self.fe_cfg   = self.cfg["feature_engineering"]
         self.pp_cfg   = self.cfg["preprocessing"]
+        self.paths_cfg = self.cfg["paths"]
         self.target   = self.cfg["data"]["target_column"]
 
         self._scaler: Optional[object]           = None
@@ -303,5 +304,83 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
     def save_feature_engineer(self, path: str = "artifacts/feature_engineering/feature_engineer.pkl") -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(self, path)
-        logger.info(f"FeatureEngineer saved → {path}")
+        logger.info(f"FeatureEngineer saved → {path}") 
     
+    def save_parquets(
+        self,
+        X_train: pd.DataFrame,
+        X_val: pd.DataFrame,
+        X_test: pd.DataFrame,
+        y_train: pd.Series,
+        y_val: pd.Series,
+        y_test: pd.Series,
+    ) -> None:
+        
+        datasets = {
+            self.paths_cfg["processed_train"]: X_train,
+            self.paths_cfg["processed_val"]: X_val,
+            self.paths_cfg["processed_test"]: X_test,
+            self.paths_cfg["processed_y_train"]: y_train,
+            self.paths_cfg["processed_y_val"]: y_val,
+            self.paths_cfg["processed_y_test"]: y_test,
+        }
+        
+        for file_path, obj in datasets.items():
+            path = Path(file_path)
+
+            # Create parent directory if it does not exist
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Feature DataFrames
+            if isinstance(obj, pd.DataFrame):
+                obj.to_parquet(path, index=False)
+                logger.info(
+                    f"Saved {path.name} | shape={obj.shape}"
+                )
+
+            # Numpy arrays returned by fit_resample
+            elif isinstance(obj, np.ndarray):
+                df = pd.DataFrame(
+                    obj,
+                    columns=self.selected_features_
+                )
+                
+                df.to_parquet(path, index=False)
+                logger.info(
+                    f"Saved {path.name} | shape={df.shape}"
+                )
+                
+            # Target Series
+            else:
+                pd.Series(obj, name=self.target).to_frame().to_parquet(
+                    path,
+                    index=False,
+                )
+                logger.info(
+                    f"Saved {path.name} | shape={(len(obj), 1)}"
+                )
+                
+                
+            
+        
+
+        
+                 
+                
+            
+            
+            
+                 
+    
+    
+    
+    
+
+    
+
+    
+        
+
+    
+       
+            

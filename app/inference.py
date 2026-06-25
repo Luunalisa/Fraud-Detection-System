@@ -1,15 +1,4 @@
-"""
-app/inference.py — Applies the full preprocessing + feature engineering chain,
-then runs the XGBoost model.
 
-Chain (mirrors run_pipeline exactly):
-  raw DataFrame
-    → DataPreprocessor.transform()      (step 4)
-    → FeatureEngineer.transform()       (step 6)
-    → model.predict_proba()             (XGBoost)
-
-No fitting happens here — all fitted state comes from loaded artifacts.
-"""
 
 from __future__ import annotations
 
@@ -31,18 +20,7 @@ RAW_COLUMNS = [
 
 
 def run_single(request_dict: dict, artifacts: dict) -> dict:
-    """
-    Score a single transaction.
-
-    Parameters
-    ----------
-    request_dict : dict from PredictRequest.dict()
-    artifacts    : dict returned by get_artifacts()
-
-    Returns
-    -------
-    dict with prediction, probability, threshold, model_version, is_fraud
-    """
+ 
     t0 = time.perf_counter()
 
     df = pd.DataFrame([request_dict])[RAW_COLUMNS]
@@ -51,18 +29,6 @@ def run_single(request_dict: dict, artifacts: dict) -> dict:
 
     latency_ms = (time.perf_counter() - t0) * 1000
     
-    """
-    Why measure latency?
-
-    In an API, latency tells you how fast your model responds.
-
-    Typical inference latencies:
-
-    < 10 ms → excellent
-    10–100 ms → very good
-    100–500 ms → acceptable for many applications
-    > 1 second → may feel slow to users
-    """
     logger.info(
         "single inference | pred=%d | prob=%.4f | threshold=%.4f | latency=%.1fms",
         pred[0], prob[0], artifacts["threshold"], latency_ms,
@@ -78,10 +44,7 @@ def run_single(request_dict: dict, artifacts: dict) -> dict:
 
 
 def run_batch(requests: list[dict], artifacts: dict) -> dict:
-    """
-    Score a batch of transactions efficiently.
-    XGBoost is vectorised — batching is much faster than looping.
-    """
+ 
     t0 = time.perf_counter()
 
     df = pd.DataFrame(requests)[RAW_COLUMNS]
@@ -105,9 +68,7 @@ def run_batch(requests: list[dict], artifacts: dict) -> dict:
 
 
 def _score(df: pd.DataFrame, artifacts: dict):
-    """
-    Internal: apply preprocessing chain and return (probs, preds).
-    """
+
     preprocessor     = artifacts["preprocessor"]
     feature_engineer = artifacts["feature_engineer"]
     model            = artifacts["model"]

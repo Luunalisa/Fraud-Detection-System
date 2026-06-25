@@ -1,11 +1,4 @@
-"""
-app/schemas.py — Pydantic request/response models for the Fraud Detection API.
 
-Input features match exactly what comes out of:
-  DataPreprocessor.transform()  →  FeatureEngineer.transform()
-
-The 46 features are the exact columns in data/processed/feature_names.json.
-"""
 
 from __future__ import annotations
 from pydantic import BaseModel, Field
@@ -13,11 +6,7 @@ from typing import Optional
 
 
 class TransactionRequest(BaseModel):
-    """
-    Raw transaction input — same fields that exist in creditcard.csv BEFORE
-    any preprocessing.  The inference pipeline applies DataPreprocessor +
-    FeatureEngineer internally, so callers send raw data.
-    """
+   
     # PCA-anonymised bank features (V1–V28)
     V1:  float
     V2:  float

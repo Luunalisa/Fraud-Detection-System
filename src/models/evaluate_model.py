@@ -1,11 +1,4 @@
-"""
-src/models/evaluate_model.py — Model evaluation utilities.
 
-Extracted from train.py:
-  - tune_threshold()        : F-beta sweep on the validation set (improvement #2).
-  - cross_validate_model()  : StratifiedKFold AUPRC distribution (improvement #4).
-  - log_feature_importance(): CSV artefact + top-N console log (improvement #5).
-"""
 
 from __future__ import annotations
 
@@ -21,15 +14,16 @@ from sklearn.metrics import (
     precision_score, 
     recall_score
 )
+from src.features.feature_selection import FeatureSelector
 from sklearn.model_selection import StratifiedKFold
 from src.utils.config import load_config
 
 logger = logging.getLogger(__name__)
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 2. Threshold Tuning — F-beta sweep on validation set
-# ──────────────────────────────────────────────────────────────────────────────
+
+# ---------- 2. Threshold Tuning — F-beta sweep on validation set ---------------
+
 
 def tune_threshold(
     val_probs: np.ndarray,
@@ -37,11 +31,7 @@ def tune_threshold(
     beta: float = 0.5,           # beta < 1 → favour precision over recall
     n_thresholds: int = 200,
 ) -> tuple[float, list[dict]]:
-    """
-    Sweep decision thresholds and pick the one that maximises F-beta on the
-    validation set.  beta=0.5 weights precision twice as much as recall,
-    which is appropriate for fraud where false positives are costly.
-    """
+  
     thresholds = np.linspace(0.01, 0.99, n_thresholds)
     best_score, best_thresh = -1.0, 0.5
     sweep = []
@@ -67,9 +57,8 @@ def tune_threshold(
     return best_thresh , sweep
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 4. Cross-Validation — AUPRC distribution
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------- 4. Cross-Validation — AUPRC distribution --------------
+
 
 def cross_validate_model(
     model: xgb.XGBClassifier,
@@ -77,11 +66,22 @@ def cross_validate_model(
     y_train: np.ndarray,
     n_splits: int = 5,
 ) -> dict[str, float]:
-    """Run StratifiedKFold and return AUPRC stats (mean, std, min, max)."""
+    
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
     scores: list[float] = []
+    
+    selector = FeatureSelector("configs/data_config.yaml")
 
     for tr_idx, va_idx in skf.split(X_train, y_train):
+        # Split fold first
+        X_tr = X_train.iloc[tr_idx]
+        y_tr = y_train.iloc[tr_idx]
+
+        X_va = X_train.iloc[va_idx]
+        y_va = y_train.iloc[va_idx]
+        
+        X_train_bal, y_train_bal = selector._balance(X_tr, y_tr)
+        
         clone = xgb.XGBClassifier(**model.get_params())
         """
         clone.fit(
@@ -91,14 +91,15 @@ def cross_validate_model(
         )
         probs = clone.predict_proba(X_train[va_idx])[:, 1]
         """
+        
 
         clone.fit(
-            X_train.iloc[tr_idx], y_train.iloc[tr_idx],
-            eval_set=[(X_train.iloc[va_idx], y_train.iloc[va_idx])],
+            X_train_bal, y_train_bal,
+            eval_set=[(X_va, y_va)],
             verbose=False,
         )
-        probs = clone.predict_proba(X_train.iloc[va_idx])[:, 1]
-        scores.append(average_precision_score(y_train[va_idx], probs))
+        probs = clone.predict_proba(X_va)[:, 1]
+        scores.append(average_precision_score(y_va, probs))
 
     stats = {
         "cv_auprc_mean": float(np.mean(scores)),
@@ -114,9 +115,8 @@ def cross_validate_model(
     return stats
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 5. Feature Importance
-# ──────────────────────────────────────────────────────────────────────────────
+
+# ---------------- 5. Feature Importance -----------------------
 
 def log_feature_importance(
     model: xgb.XGBClassifier,
@@ -124,10 +124,7 @@ def log_feature_importance(
     top_n: int = 20,
     output_dir: Path = Path("artifacts/evaluation"),
 ) -> Path:
-    """
-    Dump feature importances (weight, gain, cover) to a CSV artefact and log
-    the top-N to console.  Returns the CSV path.
-    """
+\
     cfg = load_config("configs/config.yaml")
 
     output_dir.mkdir(parents=True, exist_ok=True)
