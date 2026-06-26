@@ -118,9 +118,9 @@ notebooks/                         scripts/
 ```
 fraud-detection-system/
 │
-├── notebooks/                        # Exploratory prototyping (before modularization)
-│   ├── 01_eda.ipynb                  # Initial data exploration, class imbalance analysis, EDA figures
-│   └── 02_feature_engineering.ipynb  # Feature experiments: time decomposition, amount transforms
+├── .github/workflows/
+│   ├── deploy.yml                # GitHub Actions: test → build → push Docker Hub
+│   └── AWS/deploy.yml            # AWS variant: push to ECR + kubectl rollout
 │
 ├── app/                          # FastAPI application
 │   ├── main.py                   # Routes, middleware, Prometheus metrics
@@ -128,57 +128,12 @@ fraud-detection-system/
 │   ├── artifacts.py              # LRU-cached artifact loader
 │   └── schemas.py                # Pydantic request/response models
 │
-├── src/
-│   ├── data/
-│   │   ├── data_ingestion.py     # CSV/Parquet loader + overview report
-│   │   └── data_preprocessing.py # Dedup, dtype fix, imputation, outlier treatment
-│   ├── features/
-│   │   ├── build_features.py     # FeatureEngineer (time, amount, scaling)
-│   │   └── feature_selection.py  # Variance, correlation, RFE, SMOTE balancing
-│   ├── models/
-│   │   ├── train_model.py        # Optuna HPO objective
-│   │   ├── evaluate_model.py     # Threshold tuning, CV, feature importance
-│   │   ├── model_registry.py     # Save, version, MLflow registration
-│   │   └── predict_model.py      # Standalone prediction utilities
-│   ├── pipelines/
-│   │   ├── data_pipeline.py      # End-to-end data preparation
-│   │   ├── training_pipeline.py  # Full training + MLflow run
-│   │   └── inference_pipeline.py # Offline batch inference
-│   ├── utils/
-│   │   ├── config.py             # YAML config loader + model versioning
-│   │   ├── helpers.py            # PSI drift calculator
-│   │   └── logger.py             # Structured logging setup
-│   └── visualization/
-│       ├── eda_plots.py          # EDA charts (13 figures saved to artifacts/figures/)
-│       ├── dashboard.py          # Dashboard data preparation
-│       └── save_dashboard_artifacts.py  # Serializes dashboard data to data/dashboard/
-│
-├── data/
-│   ├── raw/
-│   │   └── creditcard.csv            # Original Kaggle dataset (284,807 transactions)
-│   ├── interim/
-│   │   ├── raw_snapshot.parquet      # Post-ingestion snapshot before preprocessing
-│   │   └── train_clean.parquet       # After dedup + dtype fix + outlier flagging
-│   ├── processed/
-│   │   ├── X_train.parquet           # Feature-engineered training set
-│   │   ├── X_val.parquet             # Validation set
-│   │   ├── X_test.parquet            # Hold-out test set
-│   │   ├── X_train_bal.parquet       # SMOTE-balanced training set
-│   │   ├── y_train/val/test.parquet  # Target labels for each split
-│   │   └── selected_features.json    # Feature names after RFE selection
-│   └── dashboard/
-│       ├── overview.json             # Dataset stats for Streamlit sidebar
-│       ├── class_dist.json           # Class distribution data
-│       ├── smote_stats.json          # Before/after SMOTE counts
-│       ├── mi_scores.json            # Mutual information scores per feature
-│       ├── correlation_matrix.csv    # Feature correlation matrix
-│       └── amount_data.csv / time_data.csv  # Plotted in Streamlit charts
-│
-├── scripts/
-│   ├── run_pipeline.py           # Entry point: runs data pipeline + training end-to-end
-│   ├── train.py                  # Standalone training script (calls training_pipeline)
-│   ├── predict.py                # Offline batch inference from command line
-│   └── aws_setup.sh              # AWS ECR + EKS setup commands (future deployment)
+├── artifacts/
+│   ├── models/                   # Trained model + version file + metadata
+│   ├── preprocessing/            # Fitted preprocessor + scaler
+│   ├── feature_engineering/      # Fitted FeatureEngineer + feature names
+│   ├── evaluation/               # Metrics, confusion matrix, threshold analysis
+│   └── figures/                  # 13 EDA plots generated during exploration
 │
 ├── configs/
 │   ├── config.yaml               # Training, MLflow, artifact paths
@@ -197,16 +152,43 @@ fraud-detection-system/
 │   ├── prometheus.yml            # Scrape configs
 │   └── grafana/                  # Dashboard JSON + datasource provisioning
 │
-├── .github/workflows/
-│   ├── deploy.yml                # GitHub Actions: test → build → push Docker Hub
-│   └── AWS/deploy.yml            # AWS variant: push to ECR + kubectl rollout
+├── notebooks/
+│   ├── 01_eda.ipynb              # Data exploration, imbalance analysis, EDA figures
+│   └── 02_feature_engineering.ipynb  # Feature prototyping before modularization
 │
-├── artifacts/
-│   ├── models/                   # Trained model + version file + metadata
-│   ├── preprocessing/            # Fitted preprocessor + scaler
-│   ├── feature_engineering/      # Fitted FeatureEngineer + feature names
-│   ├── evaluation/               # Metrics, confusion matrix, threshold analysis
-│   └── figures/                  # 13 EDA plots generated during exploration
+├── scripts/
+│   ├── run_pipeline.py           # Entry point: runs data pipeline + training end-to-end
+│   ├── train.py                  # Standalone training script
+│   ├── predict.py                # Offline batch inference from command line
+│   └── aws_setup.sh              # AWS ECR + EKS setup commands (future deployment)
+│
+├── src/
+│   ├── data/
+│   │   ├── data_ingestion.py     # CSV/Parquet loader + overview report
+│   │   └── data_preprocessing.py # Dedup, dtype fix, imputation, outlier treatment
+│   ├── features/
+│   │   ├── build_features.py     # FeatureEngineer (time, amount, scaling)
+│   │   └── feature_selection.py  # Variance, correlation, RFE (reserved for linear models)
+│   ├── models/
+│   │   ├── train_model.py        # Optuna HPO objective
+│   │   ├── evaluate_model.py     # Threshold tuning, CV, feature importance
+│   │   ├── model_registry.py     # Save, version, MLflow registration
+│   │   └── predict_model.py      # Standalone prediction utilities
+│   ├── pipelines/
+│   │   ├── data_pipeline.py      # End-to-end data preparation
+│   │   ├── training_pipeline.py  # Full training + MLflow run
+│   │   └── inference_pipeline.py # Offline batch inference
+│   ├── utils/
+│   │   ├── config.py             # YAML config loader + model versioning
+│   │   ├── helpers.py            # PSI drift calculator
+│   │   └── logger.py             # Structured logging setup
+│   └── visualization/
+│       ├── eda_plots.py          # EDA charts (13 figures)
+│       ├── dashboard.py          # Dashboard data preparation
+│       └── save_dashboard_artifacts.py  # Serializes data to data/dashboard/
+│
+├── streamlit/
+│   └── app.py                    # Interactive prediction dashboard
 │
 ├── tests/
 │   ├── test_api.py               # FastAPI endpoint tests (mocked artifacts)
@@ -214,10 +196,12 @@ fraud-detection-system/
 │   ├── test_features.py          # Feature engineering tests
 │   └── test_model.py             # Model inference tests
 │
-├── streamlit/app.py              # Interactive prediction dashboard
+├── .dockerignore
+├── .gitignore
 ├── Dockerfile                    # Multi-stage build
-├── docker-compose.yml            # API + Streamlit + Prometheus + Grafana
 ├── Makefile                      # Convenience commands
+├── README.md
+├── docker-compose.yml            # API + Streamlit + Prometheus + Grafana
 └── requirements.txt
 ```
 
