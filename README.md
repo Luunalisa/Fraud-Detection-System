@@ -656,6 +656,38 @@ Prometheus-format metrics for scraping.
 
 ---
 
+## 🚧 Challenges
+
+**Class imbalance (577:1 ratio)** — the biggest technical challenge of the project. A naive model predicting "all legitimate" scores 99.83% accuracy, making standard metrics useless. This required a combination of three strategies working together: `scale_pos_weight=577` at the loss function level, SMOTE inside CV folds for synthetic oversampling, and switching the optimization target entirely to AUPRC instead of accuracy or ROC-AUC.
+
+**Correct SMOTE placement** — applying SMOTE before the train/val/test split is one of the most common mistakes in fraud detection tutorials, and it causes silent data leakage that inflates all reported metrics. Getting this right (applying SMOTE only inside each CV fold's training portion) required careful pipeline design so the balancing step never sees validation or test data.
+
+**Preventing data leakage across the pipeline** — every stateful transformation (imputation statistics, outlier thresholds, scalers, feature engineer bin edges, RFE rankings) had to be fitted exclusively on training data and applied to val/test. With multiple sequential transformers this is easy to get wrong. The solution was making every transformer sklearn-compatible (`fit` / `transform` split) and serializing the fitted objects so the exact same state is used at inference time.
+
+**Threshold tuning on imbalanced data** — the default 0.5 decision threshold is almost never optimal when classes are heavily skewed. Finding the right threshold required a full sweep across 200 values, evaluating F-beta (β=0.5) to balance precision and recall with a deliberate bias toward precision — because falsely flagging a legitimate customer has a real business cost.
+
+**Kubernetes deployment without cloud access** — validating a full Kubernetes deployment (rolling updates, HPA, liveness/readiness probes, resource limits) without an AWS account required using Minikube correctly: building the image directly into Minikube's Docker daemon (`eval $(minikube docker-env)`), applying the same manifests, and verifying all probes behaved as expected under load.
+
+**Reproducibility across training runs** — with Optuna running 50 trials and SMOTE generating synthetic data, ensuring that any run can be reproduced required setting random seeds at every level (Optuna sampler, XGBoost, SMOTE, train/test split) and logging every parameter, artifact, and config snapshot to MLflow.
+
+---
+
+## 🔭 Future Work
+
+**Compare linear models against XGBoost** — the `FeatureSelector` class (variance threshold, correlation filter, RFE) in `src/features/feature_selection.py` was built but intentionally not applied in this project because XGBoost handles feature selection internally. The next experiment is to run Logistic Regression and Linear SVM through the full feature selection pipeline and compare their AUPRC, precision, and recall against the current XGBoost baseline — to quantify how much the tree model's implicit feature handling is worth.
+
+**Ensemble / stacking** — combine XGBoost with an Isolation Forest (unsupervised anomaly detector) or a LightGBM model in a stacking ensemble to see if the combination catches fraud patterns that a single model misses.
+
+**Real-time feature store** — the current pipeline computes features at request time from raw transaction fields. A production upgrade would pre-compute velocity features (transactions in last 1h / 24h per card, rolling average amount) using a streaming system like Kafka + Flink, storing them in a low-latency feature store (Redis or Feast) for sub-millisecond lookup at inference.
+
+**Automated retraining trigger** — the PSI drift detector is already implemented. The next step is wiring it to a scheduled job that computes PSI on incoming production data weekly and triggers a full retraining run via the GitHub Actions pipeline when any feature exceeds the 0.20 drift threshold.
+
+**AWS deployment** — deploy to EKS using the existing `scripts/aws_setup.sh` and `workflows/AWS/deploy.yml` once an AWS account is available. The Kubernetes manifests, CI/CD pipeline, and Docker image are already AWS-ready; the only remaining step is provisioning the cluster and ECR repository.
+
+**Explainability layer** — add a `/explain` endpoint to the FastAPI app that returns SHAP values for each prediction, showing which features drove the fraud score for that specific transaction. Useful for compliance teams who need to justify why a transaction was flagged.
+
+---
+
 ## Why This Project Matters
 
 This project was built to demonstrate real production ML engineering skills, not just model accuracy:
