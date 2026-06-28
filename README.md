@@ -2,7 +2,7 @@
 
 An end-to-end **production-grade MLOps pipeline** for real-time credit card fraud detection. This project covers the full ML lifecycle: from exploratory analysis and feature engineering, through model training with automated hyperparameter tuning, to containerized deployment on Kubernetes with live monitoring.
 
-> **Note on infrastructure:** AWS EKS is the production-target deployment (CI/CD pipeline included). Due to not having an AWS account yet, the deployment was validated locally using **Minikube** — which runs the same Kubernetes manifests, proving real cloud-deployment readiness without the cost. The architecture, configs, and k8s files are fully AWS-compatible.
+> **Note on infrastructure:** AWS EKS is the production-target deployment (CI/CD pipeline included). Due to not having an AWS account yet, the deployment was validated locally using **Minikube** — which runs the same Kubernetes manifests, proving real cloud-deployment readiness without the cost. The architecture, configs, and k8s files are fully AWS-compatible. 
 
 ---
 
