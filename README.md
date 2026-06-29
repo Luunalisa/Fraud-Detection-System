@@ -658,7 +658,7 @@ Prometheus-format metrics for scraping.
 
 ---
 
-## 🚧 Challenges
+## Challenges
 
 **Class imbalance (577:1 ratio)** — the biggest technical challenge of the project. A naive model predicting "all legitimate" scores 99.83% accuracy, making standard metrics useless. This required a combination of three strategies working together: `scale_pos_weight=577` at the loss function level, SMOTE inside CV folds for synthetic oversampling, and switching the optimization target entirely to AUPRC instead of accuracy or ROC-AUC.
 
@@ -674,7 +674,7 @@ Prometheus-format metrics for scraping.
 
 ---
 
-## 🔭 Future Work
+## Future Work
 
 **Compare linear models against XGBoost** — the `FeatureSelector` class (variance threshold, correlation filter, RFE) in `src/features/feature_selection.py` was built but intentionally not applied in this project because XGBoost handles feature selection internally. The next experiment is to run Logistic Regression and Linear SVM through the full feature selection pipeline and compare their AUPRC, precision, and recall against the current XGBoost baseline — to quantify how much the tree model's implicit feature handling is worth.
 
