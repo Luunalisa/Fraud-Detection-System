@@ -31,6 +31,7 @@ An end-to-end **production-grade MLOps pipeline** for real-time credit card frau
 - [Tech Stack](#tech-stack)
 - [Quick Start](#quick-start)
 - [API Reference](#api-reference)
+- [Challenges](#challenges)
 - [Why This Project Matters](#why-this-project-matters)
 
 ---
